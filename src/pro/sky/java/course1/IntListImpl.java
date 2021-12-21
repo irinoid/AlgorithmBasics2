@@ -19,12 +19,10 @@ public class IntListImpl implements IntList {
                 return intArray[i];
             }
         }
-        Integer[] stringArrayTemp = new Integer[intArray.length + 10];
-        int sizeArray = intArray.length;
-        System.arraycopy(intArray, 0, stringArrayTemp, 0, intArray.length);
-        stringArrayTemp[intArray.length] = item;
-        intArray = stringArrayTemp;
-        return intArray[sizeArray];
+        int addItemIndex = intArray.length;
+        grow();
+        intArray[addItemIndex] = item;
+        return intArray[addItemIndex];
     }
 
     @Override
@@ -34,12 +32,10 @@ public class IntListImpl implements IntList {
                 throw new IndexOutOfBoundsException("Индекс превышает длину списка");
             }
         }
-        if (index < intArray.length - 1) {
-            Integer[] intArrayTemp = new Integer[intArray.length + 1];
-            System.arraycopy(intArray, 0, intArrayTemp, 0, index);
-            intArrayTemp[index] = item;
-            System.arraycopy(intArray, index, intArrayTemp, index + 1, intArray.length - index - 1);
-            intArray = intArrayTemp;
+        if (index < intArray.length) {
+            grow();
+            System.arraycopy(intArray, index, intArray, index + 1, intArray.length - index - 1);
+            intArray[index] = item;
             return intArray[index];
         }
         throw new IndexOutOfBoundsException("Индекс превышает длину массива");
@@ -70,10 +66,26 @@ public class IntListImpl implements IntList {
                 Integer[] intArrayTemp = new Integer[intArray.length - 1];
                 System.arraycopy(intArray, 0, intArrayTemp, 0, intArray.length - 1);
                 intArray = intArrayTemp;
+                if (checkFullness()){
+                    resize();
+                }
                 return intTemp;
             }
         }
         throw new IllegalArgumentException("Элемента нет в списке");
+    }
+
+    private boolean checkFullness(){
+        int count=0;
+        for (int i =0; i< intArray.length; i++){
+            if (!intArray[i].equals(null)){
+                count ++;
+            }
+        }
+        if (count<intArray.length/2){
+            return true;
+        }
+        return false;
     }
 
     @Override
@@ -179,14 +191,48 @@ public class IntListImpl implements IntList {
     }
 
     private void sortArray() {
-        for (int i = 1; i < intArray.length; i++) {
-            Integer temp = intArray[i];
-            int j = i;
-            while (j > 0 && intArray[j - 1] >= temp) {
-                intArray[j] = intArray[j - 1];
-                j--;
+        mergeSort(intArray);
+    }
+
+    public static void mergeSort(Integer[] arr) {
+        if (arr.length < 2) {
+            return;
+        }
+        Integer mid = arr.length / 2;
+        Integer[] left = new Integer[mid];
+        Integer[] right = new Integer[arr.length - mid];
+
+        for (int i = 0; i < left.length; i++) {
+            left[i] = arr[i];
+        }
+
+        for (int i = 0; i < right.length; i++) {
+            right[i] = arr[mid + i];
+        }
+
+        mergeSort(left);
+        mergeSort(right);
+
+        merge(arr, left, right);
+    }
+
+    public static void merge(Integer[] arr, Integer[] left, Integer[] right) {
+
+        Integer mainP = 0;
+        Integer leftP = 0;
+        Integer rightP = 0;
+        while (leftP < left.length && rightP < right.length) {
+            if (left[leftP] <= right[rightP]) {
+                arr[mainP++] = left[leftP++];
+            } else {
+                arr[mainP++] = right[rightP++];
             }
-            intArray[j] = temp;
+        }
+        while (leftP < left.length) {
+            arr[mainP++] = left[leftP++];
+        }
+        while (rightP < right.length) {
+            arr[mainP++] = right[rightP++];
         }
     }
 
@@ -209,4 +255,17 @@ public class IntListImpl implements IntList {
         }
         return false;
     }
+
+    private void grow() {
+        Integer[] newIntArray = new Integer[intArray.length + intArray.length / 2];
+        System.arraycopy(intArray, 0, newIntArray, 0, intArray.length);
+        intArray = newIntArray;
+    }
+
+    private void resize(){
+        Integer[] newIntArray = new Integer[intArray.length - intArray.length/3];
+        System.arraycopy(intArray, 0, newIntArray, 0, intArray.length);
+        intArray = newIntArray;
+    }
+
 }
