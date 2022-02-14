@@ -5,7 +5,7 @@ import java.util.Arrays;
 public class CorrectWorkCheck {
 
     public static void main(String[] args) {
-        final IntListImpl intList = new IntListImpl(10);
+
 
         int[] arr = generateRandomArray();
         int[] bubbleArr = Arrays.copyOf(arr, arr.length);

@@ -4,103 +4,91 @@ import java.util.Arrays;
 
 public class IntListImpl implements IntList {
 
-    private Integer[] intArray;
+    private Integer[] storage;
+    private int size;
 
     public IntListImpl(int sizeStringArray) {
-        this.intArray = new Integer[sizeStringArray];
+        if (sizeStringArray < 0) {
+            throw new IllegalArgumentException("Недопустимый размер списка");
+        }
+        this.storage = new Integer[sizeStringArray];
+    }
+
+    private void validateIndex(int index) {
+        if (index > size || index < 0) {
+            throw new IndexOutOfBoundsException("Индекс превышает длину списка");
+        }
+    }
+
+    private Integer add(Integer item, int index) {
+        validateIndex(index);
+        storage[index] = item;
+        size++;
+        return storage[index];
     }
 
     @Override
     public Integer add(Integer item) {
-
-        for (int i = 0; i < intArray.length; i++) {
-            if (intArray[i].equals(null)) {
-                intArray[i] = item;
-                return intArray[i];
-            }
+        if (size < storage.length) {
+            return add(item, size);
         }
-        int addItemIndex = intArray.length;
-        grow();
-        intArray[addItemIndex] = item;
-        return intArray[addItemIndex];
+        if (size == storage.length) {
+            grow();
+        }
+        return add(item, size);
     }
 
     @Override
     public Integer add(int index, Integer item) {
-        for (int i = 0; i < index; i++) {
-            if (intArray[i].equals(null)) {
-                throw new IndexOutOfBoundsException("Индекс превышает длину списка");
-            }
-        }
-        if (index < intArray.length) {
+        validateIndex(index);
+        if (storage.length < size + 1) {
             grow();
-            System.arraycopy(intArray, index, intArray, index + 1, intArray.length - index - 1);
-            intArray[index] = item;
-            return intArray[index];
         }
-        throw new IndexOutOfBoundsException("Индекс превышает длину массива");
+        for (int i = index; i < size + 1; i++) {
+            storage[i + 1] = storage[i];
+        }
+        return add(item, index);
     }
 
     @Override
     public Integer set(int index, Integer item) {
-        for (int i = 0; i < index; i++) {
-            if (intArray[i].equals(null)) {
-                throw new IndexOutOfBoundsException("Индекс превышает длину списка");
-            }
-        }
-        if (index < intArray.length - 1) {
-            intArray[index] = item;
-            return intArray[index];
-        }
-        throw new IndexOutOfBoundsException("Индекс превышает длину массива");
+        validateIndex(index);
+        storage[index] = item;
+        return storage[index];
     }
 
     @Override
     public Integer remove(Integer item) {
-        for (int i = 0; i < intArray.length; i++) {
-            if (intArray[i].equals(item)) {
-                Integer intTemp = intArray[i];
-                for (int j = i + 1; j < intArray.length; j++) {
-                    intArray[j] = intArray[j - 1];
-                }
-                Integer[] intArrayTemp = new Integer[intArray.length - 1];
-                System.arraycopy(intArray, 0, intArrayTemp, 0, intArray.length - 1);
-                intArray = intArrayTemp;
-                if (checkFullness()){
-                    resize();
-                }
-                return intTemp;
-            }
+        int index = indexOf(item);
+        Integer intTemp = storage[index];
+        if (index > 0) {
+            System.arraycopy(storage, index + 1, storage, index, storage.length - index - 1);
+            size--;
+            return intTemp;
         }
         throw new IllegalArgumentException("Элемента нет в списке");
     }
 
-    private boolean checkFullness(){
-        int count=0;
-        for (int i =0; i< intArray.length; i++){
-            if (!intArray[i].equals(null)){
-                count ++;
+    /*private boolean checkFullness() {
+        int count = 0;
+        for (int i = 0; i < storage.length; i++) {
+            if (!storage[i].equals(null)) {
+                count++;
             }
         }
-        if (count<intArray.length/2){
+        if (count < storage.length / 2) {
             return true;
         }
         return false;
-    }
+    }*/
 
     @Override
     public Integer remove(int index) {
-        if (index < intArray.length) {
-            Integer intTemp = intArray[index];
-            for (int i = index; i < intArray.length; i++) {
-                intArray[i] = intArray[i + 1];
-            }
-            Integer[] intArrayTemp = new Integer[intArray.length - 1];
-            System.arraycopy(intArray, 0, intArrayTemp, 0, intArray.length - 1);
-            intArray = intArrayTemp;
-            return intTemp;
-        }
-        throw new IndexOutOfBoundsException("Индекс превышает длину массива");
+        validateIndex(index);
+        Integer intTemp = storage[index];
+        System.arraycopy(storage, index + 1, storage, index, storage.length - index - 1);
+        size--;
+        return intTemp;
     }
 
     @Override
@@ -111,8 +99,8 @@ public class IntListImpl implements IntList {
 
     @Override
     public int indexOf(Integer item) {
-        for (int i = 0; i < intArray.length; i++) {
-            if (intArray[i].equals(item)) {
+        for (int i = 0; i < size; i++) {
+            if (storage[i].equals(item)) {
                 return i;
             }
         }
@@ -121,8 +109,8 @@ public class IntListImpl implements IntList {
 
     @Override
     public int lastIndexOf(Integer item) {
-        for (int i = intArray.length - 1; i >= 0; i--) {
-            if (intArray[i].equals(item)) {
+        for (int i = storage.length - 1; i >= 0; i--) {
+            if (storage[i].equals(item)) {
                 return i;
             }
         }
@@ -131,67 +119,40 @@ public class IntListImpl implements IntList {
 
     @Override
     public Integer get(int index) {
-        if (index < intArray.length) {
-            return intArray[index];
-        }
-        throw new IndexOutOfBoundsException("Индекс превышает размер массива");
+        validateIndex(index);
+        return storage[index];
     }
 
     @Override
     public boolean equals(Integer[] otherList) {
-        if (intArray.length != otherList.length) {
+        if (storage.length != otherList.length) {
             return false;
-        } else {
-            for (int i = 0; i < intArray.length; i++) {
-                if (!intArray[i].equals(otherList[i])) {
-                    return false;
-                }
-            }
         }
-        return true;
+        return Arrays.equals(toArray(), otherList);
     }
 
     @Override
     public int size() {
-        int listSize = 0;
-        for (int i = 0; i < intArray.length; i++) {
-            if (!intArray[i].equals(null)) {
-                listSize++;
-            }
-        }
-        return listSize;
+        return size;
     }
 
     @Override
     public boolean isEmpty() {
-        for (int i = 0; i < intArray.length; i++) {
-            if (!intArray[i].equals(null)) {
-                return false;
-            }
-        }
-        return true;
+        return size == 0;
     }
 
     @Override
     public void clear() {
-        Arrays.fill(intArray, null);
+        size = 0;
     }
 
     @Override
     public Integer[] toArray() {
-        Integer[] newIntArray = new Integer[intArray.length];
-        int j = 0;
-        for (int i = 0; i < intArray.length; i++) {
-            if (!intArray[i].equals(null)) {
-                newIntArray[j] = intArray[i];
-                j++;
-            }
-        }
-        return newIntArray;
+        return Arrays.copyOf(storage, size);
     }
 
     private void sortArray() {
-        mergeSort(intArray);
+        mergeSort(storage);
     }
 
     public static void mergeSort(Integer[] arr) {
@@ -238,16 +199,16 @@ public class IntListImpl implements IntList {
 
     private boolean binarySearch(Integer item) {
         int min = 0;
-        int max = intArray.length - 1;
+        int max = storage.length - 1;
 
         while (min <= max) {
             int mid = (min + max) / 2;
 
-            if (item == intArray[mid]) {
+            if (item == storage[mid]) {
                 return true;
             }
 
-            if (item < intArray[mid]) {
+            if (item < storage[mid]) {
                 max = mid - 1;
             } else {
                 min = mid + 1;
@@ -257,15 +218,15 @@ public class IntListImpl implements IntList {
     }
 
     private void grow() {
-        Integer[] newIntArray = new Integer[intArray.length + intArray.length / 2];
-        System.arraycopy(intArray, 0, newIntArray, 0, intArray.length);
-        intArray = newIntArray;
+        Integer[] newIntArray = new Integer[storage.length + storage.length / 2];
+        System.arraycopy(storage, 0, newIntArray, 0, storage.length);
+        storage = newIntArray;
     }
 
-    private void resize(){
-        Integer[] newIntArray = new Integer[intArray.length - intArray.length/3];
-        System.arraycopy(intArray, 0, newIntArray, 0, intArray.length);
-        intArray = newIntArray;
-    }
+    /*private void resize() {
+        Integer[] newIntArray = new Integer[storage.length - storage.length / 3];
+        System.arraycopy(storage, 0, newIntArray, 0, storage.length);
+        storage = newIntArray;
+    }*/
 
 }
