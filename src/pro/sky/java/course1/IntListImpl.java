@@ -29,9 +29,6 @@ public class IntListImpl implements IntList {
 
     @Override
     public Integer add(Integer item) {
-        if (size < storage.length) {
-            return add(item, size);
-        }
         if (size == storage.length) {
             grow();
         }
@@ -44,9 +41,7 @@ public class IntListImpl implements IntList {
         if (storage.length < size + 1) {
             grow();
         }
-        for (int i = index; i < size + 1; i++) {
-            storage[i + 1] = storage[i];
-        }
+        System.arraycopy(storage, index, storage, index + 1, storage.length - index - 1);
         return add(item, index);
     }
 
@@ -61,7 +56,7 @@ public class IntListImpl implements IntList {
     public Integer remove(Integer item) {
         int index = indexOf(item);
         Integer intTemp = storage[index];
-        if (index > 0) {
+        if (index >= 0) {
             System.arraycopy(storage, index + 1, storage, index, storage.length - index - 1);
             size--;
             return intTemp;
@@ -93,8 +88,9 @@ public class IntListImpl implements IntList {
 
     @Override
     public boolean contains(Integer item) {
-        sortArray();
-        return binarySearch(item);
+        Integer[] storage2 = Arrays.copyOf(storage, size+1);
+        mergeSort(storage2);
+        return binarySearch(item, storage2);
     }
 
     @Override
@@ -125,7 +121,7 @@ public class IntListImpl implements IntList {
 
     @Override
     public boolean equals(Integer[] otherList) {
-        if (storage.length != otherList.length) {
+        if (size != otherList.length) {
             return false;
         }
         return Arrays.equals(toArray(), otherList);
@@ -197,18 +193,18 @@ public class IntListImpl implements IntList {
         }
     }
 
-    private boolean binarySearch(Integer item) {
+    private boolean binarySearch(Integer item, Integer[] array) {
         int min = 0;
-        int max = storage.length - 1;
+        int max = array.length - 1;
 
         while (min <= max) {
             int mid = (min + max) / 2;
 
-            if (item == storage[mid]) {
+            if (item == array[mid]) {
                 return true;
             }
 
-            if (item < storage[mid]) {
+            if (item < array[mid]) {
                 max = mid - 1;
             } else {
                 min = mid + 1;
