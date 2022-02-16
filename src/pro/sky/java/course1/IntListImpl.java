@@ -59,12 +59,15 @@ public class IntListImpl implements IntList {
         if (index >= 0) {
             System.arraycopy(storage, index + 1, storage, index, storage.length - index - 1);
             size--;
+            if (checkFullness()){
+                resize();
+            }
             return intTemp;
         }
         throw new IllegalArgumentException("Элемента нет в списке");
     }
 
-    /*private boolean checkFullness() {
+    private boolean checkFullness() {
         int count = 0;
         for (int i = 0; i < storage.length; i++) {
             if (!storage[i].equals(null)) {
@@ -75,7 +78,7 @@ public class IntListImpl implements IntList {
             return true;
         }
         return false;
-    }*/
+    }
 
     @Override
     public Integer remove(int index) {
@@ -83,6 +86,9 @@ public class IntListImpl implements IntList {
         Integer intTemp = storage[index];
         System.arraycopy(storage, index + 1, storage, index, storage.length - index - 1);
         size--;
+        if (checkFullness()){
+            resize();
+        }
         return intTemp;
     }
 
@@ -219,10 +225,10 @@ public class IntListImpl implements IntList {
         storage = newIntArray;
     }
 
-    /*private void resize() {
+    private void resize() {
         Integer[] newIntArray = new Integer[storage.length - storage.length / 3];
         System.arraycopy(storage, 0, newIntArray, 0, storage.length);
         storage = newIntArray;
-    }*/
+    }
 
 }
